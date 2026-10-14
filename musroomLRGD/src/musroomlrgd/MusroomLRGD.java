@@ -15,6 +15,22 @@ public class MusroomLRGD extends JPanel{
     private static final double LEARNING_RATE = .01;
     private static final int ITERATIONS = 1000;
 
+    // Must match the feature columns in framingham.csv, before TenYearCHD.
+    private static final String[] FEATURE_NAMES = {
+        "male", "age", "education", "currentSmoker", "cigsPerDay",
+        "BPMeds", "prevalentStroke", "prevalentHyp", "diabetes",
+        "totChol", "sysBP", "diaBP", "BMI", "heartRate", "glucose"
+    };
+    private static final String[] FEATURE_PROMPTS = {
+        "male (0 or 1)", "age (years)", "education (1-4)",
+        "current smoker (0 or 1)", "cigarettes per day",
+        "blood pressure medication (0 or 1)", "history of stroke (0 or 1)",
+        "hypertension (0 or 1)", "diabetes (0 or 1)",
+        "total cholesterol (mg/dL)", "systolic blood pressure (mmHg)",
+        "diastolic blood pressure (mmHg)", "BMI (kg/m^2)",
+        "heart rate (beats/min)", "glucose (mg/dL)"
+    };
+
     private final List<double[]> features = new ArrayList<>();
     private final List<Integer> labels = new ArrayList<>();
     
