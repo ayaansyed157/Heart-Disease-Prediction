@@ -36,13 +36,51 @@ public class MusroomLRGD extends JPanel{
     
     private double[] weights;
     private double bias;
+    private double[] featureMeans;
+    private double[] featureScales;
+
+    private void fitFeatureScaler() {
+        int numFeatures = features.get(0).length;
+        featureMeans = new double[numFeatures];
+        featureScales = new double[numFeatures];
+        for (double[] row : features) {
+            for (int j = 0; j < numFeatures; j++) {
+                featureMeans[j] += row[j];
+            }
+        }
+        for (int j = 0; j < numFeatures; j++) {
+            featureMeans[j] /= features.size();
+        }
+        for (double[] row : features) {
+            for (int j = 0; j < numFeatures; j++) {
+                double difference = row[j] - featureMeans[j];
+                featureScales[j] += difference * difference;
+            }
+        }
+        for (int j = 0; j < numFeatures; j++) {
+            double standardDeviation = Math.sqrt(featureScales[j] / features.size());
+            // A constant column becomes zero after centering; avoid division by zero.
+            featureScales[j] = standardDeviation == 0.0 ? 1.0 : standardDeviation;
+        }
+    }
+
+    private double scaleFeature(double value, int column) {
+        return (value - featureMeans[column]) / featureScales[column];
+    }
 
     public void readData(String filename) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String expectedHeader = String.join(",", FEATURE_NAMES) + ",TenYearCHD";
+            if (!expectedHeader.equals(reader.readLine())) {
+                throw new IOException("Dataset columns must match: " + expectedHeader);
+            }
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                double[] featureMatrix = new double[parts.length - 1];
+                String[] parts = line.split(",", -1);
+                if (parts.length != FEATURE_NAMES.length + 1) {
+                    throw new IOException("Expected 15 features and one label per row.");
+                }
+                double[] featureMatrix = new double[FEATURE_NAMES.length];
                 boolean hasNonNumeric = false;
                 for (int i = 0; i < featureMatrix.length; i++) {
                     try {
@@ -61,6 +99,11 @@ public class MusroomLRGD extends JPanel{
     }
 
    public void train() {
+        if (features.isEmpty()) {
+            throw new IllegalStateException("Load at least one valid training row first.");
+        }
+        // Fit only on training records. Keep the original values for prediction input.
+        fitFeatureScaler();
         int numFeatures = features.get(0).length;
         //System.out.print(numFeatures);
         weights = new double[numFeatures];
@@ -83,7 +126,7 @@ public class MusroomLRGD extends JPanel{
                 //System.out.println(prediction);
                 
                 for (int j = 0; j < numFeatures; j++) {
-                    gradient[j] += (label - prediction) * featureMatrix[j];
+                    gradient[j] += (label - prediction) * scaleFeature(featureMatrix[j], j);
                     //System.out.println(gradient[j]);
                 }
             }
@@ -97,11 +140,18 @@ public class MusroomLRGD extends JPanel{
     }
 
     public double predict(double[] featureMatrix) {
+        if (weights == null) {
+            throw new IllegalStateException("Train the model before predicting.");
+        }
+        if (featureMatrix == null || featureMatrix.length != weights.length) {
+            throw new IllegalArgumentException("Expected " + weights.length
+                    + " features in dataset column order.");
+        }
         double z = bias;
         for (int i = 0; i < featureMatrix.length; i++) {
             //dot product of wTx
             
-            z += weights[i] * featureMatrix[i];
+            z += weights[i] * scaleFeature(featureMatrix[i], i);
             
             }
             
@@ -153,13 +203,11 @@ public class MusroomLRGD extends JPanel{
             
             //Predicting based off of user input
             Scanner scanner = new Scanner(System.in);
-            System.out.print("Enter age: ");
-            double age = scanner.nextDouble();
-            System.out.print("Enter glucose level: ");
-            double glucose = scanner.nextDouble();
-            System.out.print("Enter BMI level: ");
-            double BMI = scanner.nextDouble();
-            double[] testFeature = {age, glucose, BMI};
+            double[] testFeature = new double[FEATURE_NAMES.length];
+            for (int i = 0; i < FEATURE_NAMES.length; i++) {
+                System.out.print("Enter " + FEATURE_PROMPTS[i] + ": ");
+                testFeature[i] = scanner.nextDouble();
+            }
             double risk = lr.predict(testFeature);
             //double risk2 = Math.random();
             
