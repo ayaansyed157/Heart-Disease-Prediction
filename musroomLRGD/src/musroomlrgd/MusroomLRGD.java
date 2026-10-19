@@ -116,6 +116,7 @@ public class MusroomLRGD extends JPanel{
         
         for (int iter = 0; iter < ITERATIONS; iter++) {
             double[] gradient = new double[numFeatures];
+            double biasGradient = 0.0;
             
             for (int i = 0; i < features.size(); i++) {
                 
@@ -129,11 +130,13 @@ public class MusroomLRGD extends JPanel{
                     gradient[j] += (label - prediction) * scaleFeature(featureMatrix[j], j);
                     //System.out.println(gradient[j]);
                 }
+                biasGradient += (label - prediction);
             }
             for (int j = 0; j < numFeatures; j++) {
                 weights[j] += LEARNING_RATE * gradient[j]/features.size();
                //System.out.println(weights[j]);
             }
+            bias += LEARNING_RATE * biasGradient / features.size();
         }
         
        
@@ -209,7 +212,7 @@ public class MusroomLRGD extends JPanel{
                 testFeature[i] = scanner.nextDouble();
             }
             double risk = lr.predict(testFeature);
-            //double risk2 = Math.random();
+            
             
             if(risk>0.5){
             System.out.println("Likely to be at risk of heart attack: " + risk);
