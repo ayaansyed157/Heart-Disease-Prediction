@@ -131,7 +131,7 @@ public class MusroomLRGD extends JPanel{
                 }
             }
             for (int j = 0; j < numFeatures; j++) {
-                weights[j] += LEARNING_RATE * gradient[j];
+                weights[j] += LEARNING_RATE * gradient[j]/features.size();
                //System.out.println(weights[j]);
             }
         }
