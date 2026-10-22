@@ -117,6 +117,7 @@ public class MusroomLRGD extends JPanel{
         for (int iter = 0; iter < ITERATIONS; iter++) {
             double[] gradient = new double[numFeatures];
             double biasGradient = 0.0;
+            double loss = 0.0;
             
             for (int i = 0; i < features.size(); i++) {
                 
@@ -125,6 +126,9 @@ public class MusroomLRGD extends JPanel{
                 
                 double prediction = predict(featureMatrix);
                 //System.out.println(prediction);
+                double p = Math.max(Math.min(prediction, 1 - 1e-15), 1e-15); // Avoid log(0)
+                loss += -label * Math.log(p) - (1 - label) * Math.log(1 - p);
+
                 
                 for (int j = 0; j < numFeatures; j++) {
                     gradient[j] += (label - prediction) * scaleFeature(featureMatrix[j], j);
@@ -137,6 +141,11 @@ public class MusroomLRGD extends JPanel{
                //System.out.println(weights[j]);
             }
             bias += LEARNING_RATE * biasGradient / features.size();
+            loss /= features.size();
+
+            if ((iter + 1) % 100 == 0) {
+                System.out.println("Iteration " + (iter + 1) + ", Loss: " + loss);
+            }
         }
         
        
