@@ -6,8 +6,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.*;
 import java.util.Scanner;
+import javax.swing.*;
 
 
 public class MusroomLRGD extends JPanel{
@@ -192,7 +192,7 @@ public class MusroomLRGD extends JPanel{
     public static void main(String[] args) {
         MusroomLRGD lr = new MusroomLRGD();
         try {
-            lr.readData("framingham.csv"); // Replace with your dataset file
+            lr.readData("C:\\dev\\Heart-Disease-Prediction\\musroomLRGD\\framingham.csv");
             lr.train();
             //lr.plotData();
             
@@ -233,7 +233,7 @@ public class MusroomLRGD extends JPanel{
             
             
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println("Error reading input data: " + e.getMessage());
             }
     
 
