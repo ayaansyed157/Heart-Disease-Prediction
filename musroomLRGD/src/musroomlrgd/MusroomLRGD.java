@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import javax.swing.*;
@@ -33,6 +34,8 @@ public class MusroomLRGD extends JPanel{
 
     private final List<double[]> features = new ArrayList<>();
     private final List<Integer> labels = new ArrayList<>();
+    private final List<double[]> testFeatures = new ArrayList<>();
+    private final List<Integer> testLabels = new ArrayList<>();
     
     private double[] weights;
     private double bias;
@@ -96,6 +99,39 @@ public class MusroomLRGD extends JPanel{
                 }
             }       
         }
+    }
+
+    public void splitData(double trainingRatio) {
+        if (trainingRatio <= 0.0 || trainingRatio >= 1.0) {
+            throw new IllegalArgumentException("Training ratio must be between 0 and 1.");
+        }
+        if (features.size() < 2) {
+            throw new IllegalStateException("Load at least two valid rows before splitting data.");
+        }
+
+        List<Integer> indices = new ArrayList<>();
+        for (int i = 0; i < features.size(); i++) {
+            indices.add(i);
+        }
+        Collections.shuffle(indices);
+
+        List<double[]> trainingFeatures = new ArrayList<>();
+        List<Integer> trainingLabels = new ArrayList<>();
+        int trainingSize = (int) (features.size() * trainingRatio);
+        for (int i = 0; i < indices.size(); i++) {
+            int index = indices.get(i);
+            if (i < trainingSize) {
+                trainingFeatures.add(features.get(index));
+                trainingLabels.add(labels.get(index));
+            } else {
+                testFeatures.add(features.get(index));
+                testLabels.add(labels.get(index));
+            }
+        }
+        features.clear();
+        features.addAll(trainingFeatures);
+        labels.clear();
+        labels.addAll(trainingLabels);
     }
 
    public void train() {
@@ -193,25 +229,15 @@ public class MusroomLRGD extends JPanel{
         MusroomLRGD lr = new MusroomLRGD();
         try {
             lr.readData("C:\\dev\\Heart-Disease-Prediction\\musroomLRGD\\framingham.csv");
+            lr.splitData(0.8); // Split data into training and testing sets (80% training, 20% testing)
             lr.train();
             //lr.plotData();
             
             // Testing accuracy
-            List<double[]> testFeatures = new ArrayList<>();
-            List<Integer> testLabels = new ArrayList<>();
-                        
-            for (int i = 0; i < lr.features.size(); i++) {
-                double[] featureMatrix = lr.features.get(i);
-                int label = lr.labels.get(i);
-                testFeatures.add(featureMatrix);
-                testLabels.add(label);
-            }
-            
-            double[][] testFeaturesArray = testFeatures.toArray(new double[0][0]);
-            int[] testLabelsArray = testLabels.stream().mapToInt(Integer::intValue).toArray();
-        
+            double[][] testFeaturesArray = lr.testFeatures.toArray(new double[0][]);
+            int[] testLabelsArray = lr.testLabels.stream().mapToInt(Integer::intValue).toArray();
             double accuracy = lr.calculateAccuracy(testFeaturesArray, testLabelsArray);
-            System.out.println("Accuracy: " + accuracy);
+            System.out.println("Accuracy on test data: " + accuracy);
             
             //Predicting based off of user input
             Scanner scanner = new Scanner(System.in);
